@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui";
+import { Input, Skeleton } from "@/components/ui";
 import { FilterCheckbox, FilterCheckboxProps } from "./filter-checkbox";
 import React from "react";
 
@@ -11,9 +11,12 @@ interface Props {
   items: Item[];
   defaultItems: Item[];
   limit?: number;
+  loading?: boolean;
   searchInputPlaceholder?: string;
-  onChange?: (value: string[]) => void;
+  onClickCheckbox?: (id: string) => void;
   defaultValue?: string[];
+  selectedIds?: Set<string>;
+  name?: string;
   className?: string;
 }
 
@@ -23,9 +26,12 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
   defaultItems,
   limit = 5,
   searchInputPlaceholder = "Поиск...",
-  onChange,
+  loading,
+  onClickCheckbox,
   defaultValue,
+  selectedIds,
   className,
+  name,
 }) => {
   const [showAll, setShowAll] = React.useState<boolean>(false);
   const [searchValue, setSearchValue] = React.useState<string>("");
@@ -33,6 +39,22 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
   const onChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
+
+  if (loading) {
+    return (
+      <div className={className}>
+        <p className="font-bold mb-3">{title}</p>
+
+        {...Array(limit)
+          .fill(0)
+          .map((_, index) => (
+            <Skeleton key={index} className="h-6 mb-4 rounded-[8px]" />
+          ))}
+        <Skeleton className="w-28 h-6 mb-4 rounded-[8px]" />
+      </div>
+    );
+  }
+
   const list = showAll
     ? items.filter((item) =>
         item.text.toLowerCase().includes(searchValue.toLowerCase())
@@ -58,10 +80,11 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
           <FilterCheckbox
             key={index}
             text={item.text}
-            onCheckedChange={(e) => console.log(e)}
-            checked={false}
+            onCheckedChange={() => onClickCheckbox?.(item.value)}
+            checked={selectedIds?.has(item.value)}
             value={item.value}
             endAdornment={item.endAdornment}
+            name={name}
           />
         ))}
       </div>
